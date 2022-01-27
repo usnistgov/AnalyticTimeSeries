@@ -78,8 +78,7 @@ if ~(all(rampIdx == 0))
         if Rf(i)~=0
             endRamp = (wfSize/FSamp);
             Theta(i,t>=(0+t0) & t<=endRamp) = Theta(i,t>=(0+t0) & t<=endRamp) + (pi*Rf(i)*t(t>=(0+t0) & t<=endRamp).^2);
-            %Theta(i,t>(endRamp+t0)) = Theta(i,t>(endRamp+t0)) + (pi*Rf(i)*(endRamp+t0)*t(t>(endRamp+t0)))+ (pi*Rf(i)*(endRamp+t0))^2;
-            Theta(i,t>(endRamp+t0)) = Theta(i,t>(endRamp+t0)) + (pi*Rf(i)*(endRamp+t0)*t(t>(endRamp+t0)));
+            Theta(i,t>(endRamp+t0)) = Theta(i,t>(endRamp+t0)) + (pi*Rf(i)*((endRamp+t0)^2)*t(t>(endRamp+t0))) + (pi*Rf(i))*(t(t>(endRamp+t0))-(endRamp+t0));
         end
     end
 end
