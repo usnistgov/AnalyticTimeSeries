@@ -40,7 +40,7 @@ Wx = 2*pi*Fx;   % amplitude modulation frequency
 Wh = 2*pi*Fh;
 
 % create the time array.  Add the settling time to both ends of the size
-t = -SettlingTime:1/FSamp:((wfSize-1)/FSamp)+SettlingTime;
+%t = -SettlingTime:1/FSamp:((wfSize-1)/FSamp)+SettlingTime;
 
 t = linspace(-SettlingTime,SettlingTime+((wfSize-1)),wfSize)/FSamp;
 
@@ -50,7 +50,9 @@ Ain = zeros(length(Xm),length(t));
 for i = 1:length(Xm)
     Ain(i,:) = Xm(i) *(1+Kx(i)*cos((Wx(i)*t)));
     % Amplitude Step: applied after time passes 0
-    Ain(i,t >= 0+t0) = Ain(i,t >= 0+t0) * (1 + KxS(i));
+    % ARG: 3/2/2022  step now steps after settling time, waits T0, then steps back to original
+    % Ain(i,t >= 0+t0) = Ain(i,t >= 0+t0) * (1 + KxS(i));
+    Ain(i,(t >= (SettlingTime))&(t <= (SettlingTime+t0))) = Ain(i,(t >= (0+SettlingTime))&(t <= (SettlingTime+t0)))* (1 + KxS(i));
 end
 
 % Phase
@@ -64,9 +66,11 @@ for i = 1:length(Ps)
 end
 
 % Phase Step
+% ARG: 3/2/2022 Phase step now steps after settling time, waits T0, then steps back to original
 if KaS(1) ~= 0
     for i = 1:length(KaS)
-        Theta(i,t >= (0+t0)) = Theta(i,t >= (0+t0)) + (KaS(i) * pi/180);
+        %Theta(i,t >= (0+t0)) = Theta(i,t >= (0+t0)) + (KaS(i) * pi/180);
+        Theta(i,(t >= (0+SettlingTime))&(t <= (SettlingTime+t0))) = Theta(i,(t >= (0+SettlingTime))&(t <= (SettlingTime+t0))) + (KaS(i) * pi/180);
     end
 end
 
@@ -84,10 +88,16 @@ if ~(all(rampIdx == 0))
 end
 
 % frequency step
+% ARG: 3/4/2022 Phase step now steps after settling time, waits T0, then steps back to original
 if ~(all(KfS == 0))
     for i = 1:length(KfS)
-        Theta(i,t>=(0+t0)) = Theta(i,t>=(0+t0)) + ((2*pi*KfS(i))*(t(t>=(0+t0))-t0));
-    end
+        % Theta(i,t>=(0+t0)) = Theta(i,t>=(0+t0)) + ((2*pi*KfS(i))*(t(t>=(0+t0))-t0));
+        if ~(all(KxS == -1.0))
+            Theta(i,(t >= (0+SettlingTime))&(t <= (SettlingTime+t0))) = Theta(i,(t >= (0+SettlingTime))&(t <= (SettlingTime+t0))) + ((2*pi*KfS(i))*(t(t>=(0+t0))-t0));        
+        else
+            % a very special case for frequency testing, if the magnitude has stepped to 0 p.u., then the frequency returns to a different value than original
+            Theta(i,(t >= (SettlingTime+t0))) = Theta(i,(t >= (SettlingTime+t0))) + ((2*pi*KfS(i))*(t(t >= (SettlingTime+t0))-t0));                    
+        end
 end
 
 % Complex signals
