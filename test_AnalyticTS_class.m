@@ -30,7 +30,8 @@ classdef test_AnalyticTS_class < matlab.unittest.TestCase
             %disp(testCase.TS.Ts.Name)
             %plot(real(testCase.TS.Ts.Data))
             %testCase = testPhaseStep(testCase);
-            testCase = testMagDropAndRestore(testCase);
+            %testCase = testMagDropAndRestore(testCase);
+            testCase = testBandLimitedNoise(testCase);
         end
     end  
     
@@ -62,6 +63,17 @@ classdef test_AnalyticTS_class < matlab.unittest.TestCase
             testCase.TS.SignalParams(KfS,:) = 50;
             testCase.TS = testCase.TS.AnalyticWaveforms();
             plot(real(testCase.TS.Ts.Data))
+        end
+        
+        function testCase = testBandLimitedNoise (testCase)
+            testCase.TS = AnalyticTS_class; 
+            testCase.TS.Duration = 2;
+            testCase.TS.SettlingTime = 1;
+            [~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,Kn,Fn]   = testCase.TS.getParamIndex;
+            testCase.TS.SignalParams(Kn,:) = 0.03;
+            testCase.TS.SignalParams(Fn,:) = 2000;
+            testCase.TS = testCase.TS.AnalyticWaveforms();
+            plot(testCase.TS.Ts.Time,real(testCase.TS.Ts.Data))
         end
         
     end
