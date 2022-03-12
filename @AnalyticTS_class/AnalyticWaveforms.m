@@ -78,15 +78,27 @@ if obj.SignalParams(4,1) >= 0
     end
     
     % frequency ramp
-    rampIdx = all([Rf; KrS]');
+    rampIdx = any([Rf; KrS]');
     if ~(all(rampIdx == 0))
         if all(Rf == 0); Rf = KrS; end  % prefer Rf over KrS
+        Wf = pi*Rf;
         for i = 1:nPhases
             if Rf(i)~=0
-                endRamp = (wfSize/FSamp);
-                Theta(i,t>=(0+t0) & t<=endRamp) = Theta(i,t>=(0+t0) & t<=endRamp) + (pi*Rf(i)*t(t>=(0+t0) & t<=endRamp).^2);
-                %Theta(i,t>(endRamp+t0)) = Theta(i,t>(endRamp+t0)) + (pi*Rf(i)*(endRamp+t0)*t(t>(endRamp+t0)))+ (pi*Rf(i)*(endRamp+t0))^2;
-                Theta(i,t>(endRamp+t0)) = Theta(i,t>(endRamp+t0)) + (pi*Rf(i)*(endRamp+t0)*t(t>(endRamp+t0)));
+                % five phases of ramping: 
+                %   from -settlingTime to t=0: no ramp, 
+                %   from t=0 to t0: ramp at Rf, 
+                %   from t0 to SettlingTime: no ramp
+                %   from SettlingTime+t0 to SettlingTime+2*t0: ramp at -Rf
+                %   from SettlingTime+2*t0 to 2*(SettlingTime+t0): no ramp
+                
+                Theta(i,t>=0 & t<=t0) = Theta(i,t>=0 & t<=t0) + (Wf(i)*t(t>=0 & t<=t0).^2);%plot(t,Theta,'b'), hold on % First ramping period                
+                Theta(i,t>t0) = Theta(i,t>t0) + Wf(i)*( (t0^2) + (t(t>t0)-t0) ); %plot(t,Theta,'r');  % set the remaining to the new frequency
+                Theta(i,t>=t0+SettlingTime & t<= 2*t0+SettlingTime) = Theta(i,t>=t0+SettlingTime & t<= 2*t0+SettlingTime) - (Wf(i)*(t(t>=t0+SettlingTime & t<= 2*t0+SettlingTime)-(t0+SettlingTime)).^2);%plot(t,Theta,'g') %second ramping period
+                Theta(i,t>2*t0+SettlingTime) = Theta(i,t>2*t0+SettlingTime) - Wf(i)*( t0^2 + t(t>(2*t0+SettlingTime))-(2*t0+SettlingTime));%plot(t,Theta,'k') % final non-ramping period                
+                
+%                 endRamp = (wfSize/FSamp);
+%                 Theta(i,t>=(0+t0) & t<=endRamp) = Theta(i,t>=(0+t0) & t<=endRamp) + (pi*Rf(i)*t(t>=(0+t0) & t<=endRamp).^2);
+%                 Theta(i,t>(endRamp+t0)) = Theta(i,t>(endRamp+t0)) + (pi*Rf(i)*(endRamp+t0)*t(t>(endRamp+t0)));
             end
         end
     end
@@ -135,7 +147,7 @@ if obj.SignalParams(4,1) >= 0
                 X = [1; exp(1i*2*pi*randn(nSamples/2-1,1));1]; % this is the full bandwidth noise in the frequency domain
                 % if the noise is band-limited
                 if Fn > 0
-                    X(find(freqbins > Fn(i))) = 0; % sets all frequency bins above the cutoff to 0
+                    X(find(freqbins < 100|freqbins > Fn(i))) = 0; % sets all frequency bins above the cutoff to 0
                 end
                 X = [X;conj(flipud(X(2:end-1)))];
                 iF = ifft(X);
@@ -230,7 +242,7 @@ end
 
 obj.Ts = timeseries(cSignal');
 obj.Ts.Time=t;
-obj.Ts = setuniformtime(obj.Ts,'StartTime',t0,'Interval',1/FSamp);
+%obj.Ts = setuniformtime(obj.Ts,'StartTime',t0,'Interval',1/FSamp);
 
 %%-------------DEBUGGING-------------------------------------------------
 % In the step test, I learned from the below that unwrapping is needed when determining frequency!
