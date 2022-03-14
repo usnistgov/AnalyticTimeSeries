@@ -26,12 +26,12 @@ classdef test_AnalyticTS_class < matlab.unittest.TestCase
     methods (Test)
         
         function regressionTests (testCase)
-            testDefault(testCase); testCase.fig = testCase.fig+1;
-            test_13_Harmonics(testCase); testCase.fig = testCase.fig+1;
-            test_13_Harmonics_180(testCase); testCase.fig = testCase.fig+1;
-            testCase = testPhaseStep(testCase); testCase.fig = testCase.fig+1;
-            testCase = testMagDropAndRestore(testCase); testCase.fig = testCase.fig+1;
-            testCase = testBandLimitedNoise(testCase); testCase.fig = testCase.fig+1;
+%             testDefault(testCase); testCase.fig = testCase.fig+1;
+%             test_13_Harmonics(testCase); testCase.fig = testCase.fig+1;
+%             test_13_Harmonics_180(testCase); testCase.fig = testCase.fig+1;
+%             testCase = testPhaseStep(testCase); testCase.fig = testCase.fig+1;
+%             testCase = testMagDropAndRestore(testCase); testCase.fig = testCase.fig+1;
+%             testCase = testBandLimitedNoise(testCase); testCase.fig = testCase.fig+1;
             testCase = testFrequencyRamp(testCase); testCase.fig = testCase.fig+1;
         end
     end
@@ -151,10 +151,10 @@ classdef test_AnalyticTS_class < matlab.unittest.TestCase
         function testCase = testFrequencyRamp (testCase)
             testCase.TS = AnalyticTS_class; 
             [~,Fin,~,~,~,~,~,~,~,~,Rf]   = testCase.TS.getParamIndex;
-            rampRng = 5;  % the range over wich to ramp
-            testCase.TS.SignalParams(Fin,:) = 50;   % initial frequency
-            testCase.TS.SignalParams(Rf,:) = 0.5;
-            testCase.TS.SettlingTime = 0.5;
+            rampRng = 10;  % the range over which to ramp
+            testCase.TS.SignalParams(Fin,:) = 45;   % initial frequency
+            testCase.TS.SignalParams(Rf,:) = 1;
+            testCase.TS.SettlingTime = 1;
             testCase.TS.T0 = rampRng/testCase.TS.SignalParams(Rf,:);
             testCase.TS.Duration = testCase.TS.SettlingTime + 2*testCase.TS.T0;
             testCase.TS = testCase.TS.AnalyticWaveforms();
