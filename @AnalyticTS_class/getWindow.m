@@ -8,8 +8,8 @@ function window = getWindow(obj,offset,analysisCycles,varargin)
     nWindow = ceil(analysisCycles*obj.SampleRate/obj.F0);
     
     if nargin > 3
-        if varargin{1} ~= true
-            nWindow = nWindow+1;
+        if strcmp(varargin{1},'odd')
+            nWindow = nWindow-1;
         end
     end
     
